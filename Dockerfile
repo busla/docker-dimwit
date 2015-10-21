@@ -1,14 +1,28 @@
-FROM dockerfile/nginx
+FROM nginx:1.9
 
 MAINTAINER Daniel Paschke <paschdan@wirkaufens.de>
+MAINTAINER Benjamin Schönebeck <benny@wirkaufens.de>
 
-RUN apt-get update && apt-get install -y nginx-extras-dbg
+EXPOSE 80
 
-RUN mkdir /mnt/media && chmod 777 /mnt/media
+# env's that never change
+ENV ENV=prod \
+    AGAN_ENV=dimwit
 
-ADD nginx.conf /etc/nginx/sites-enabled/default
+# basic apt state
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get clean
 
-RUN sed -i /etc/nginx/nginx.conf -e 's:/var/log/nginx/access.log:/dev/stdout:'
-RUN sed -i /etc/nginx/nginx.conf -e 's:/var/log/nginx/error.log:/dev/stdout:'
+# install additional packages (for nginx.conf modification)
+RUN apt-get update && apt-get install -y -q --no-install-recommends augeas-tools augeas-lenses
 
-VOLUME /mnt/media
+COPY ./ /
+ENTRYPOINT [ "/.deploy/bash/docker_guest_wrapper.sh" ]
+
+# install dependencies
+RUN [ "/.deploy/bash/docker_guest_wrapper.sh", "install-requirements" ]
+
+# clean up
+RUN [ "/.deploy/bash/docker_guest_wrapper.sh", "clean" ]
+
+VOLUME [ "/var/www", "/.deploy" ]
