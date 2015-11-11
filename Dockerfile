@@ -13,9 +13,6 @@ ENV ENV=prod \
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get clean
 
-# install additional packages (for nginx.conf modification)
-RUN apt-get update && apt-get install -y -q --no-install-recommends augeas-tools augeas-lenses
-
 COPY ./ /
 ENTRYPOINT [ "/.deploy/bash/docker_guest_wrapper.sh" ]
 
